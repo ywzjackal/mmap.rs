@@ -35,7 +35,7 @@ impl MMap {
     }
 
     pub fn as_object<T>(&self) -> *mut T {
-        unsafe { self.vaddr as *mut T }
+        self.vaddr as *mut T
     }
 }
 
