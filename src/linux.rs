@@ -34,8 +34,12 @@ impl MMap {
         }
     }
 
-    pub fn as_object<T>(&self) -> *mut T {
+    pub fn as_object_pointer<T>(&self) -> *mut T {
         self.vaddr as *mut T
+    }
+
+    pub fn as_pointer(&self) -> *mut c_void {
+        self.vaddr
     }
 }
 
