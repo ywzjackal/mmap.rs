@@ -3,6 +3,8 @@ use libc::{c_int, c_long, c_void};
 use std::fs::{OpenOptions};
 use std::os::unix::io::AsRawFd;
 
+type Ptr = c_long;
+
 const PROT_READ: c_int = 0x1;        /* Page can be read.  */
 const PROT_WRITE: c_int = 0x2;        /* Page can be written.  */
 
@@ -15,24 +17,24 @@ extern {
     fn munmap(_addr: *mut c_void, _len: c_long) -> c_int;
 }
 
+#[derive(Clone)]
 pub struct MMap {
-    addr: *mut c_void,
+    addr: Ptr,
     len: c_long,
-    vaddr: *mut c_void,
+    vaddr: Ptr,
 }
 
 impl MMap {
     pub fn anonymous(addr: usize, len: usize) -> Result<MMap> {
         let len = len as c_long;
-        let addr = addr as *mut c_void;
         let rt = unsafe { mmap(addr as *mut c_void, len, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0 as c_long) };
         if rt as c_long == -1 {
             Err(Error::last_os_error())
         } else {
             Ok(MMap {
-                addr: addr,
+                addr: addr as Ptr,
                 len: len,
-                vaddr: rt,
+                vaddr: rt as Ptr,
             })
         }
     }
@@ -42,15 +44,14 @@ impl MMap {
         opt.create(false).write(true).read(true).append(false);
         let f = try!(opt.open(path).map_err(|e| { e }));
         let len = len as c_long;
-        let addr = addr as *mut c_void;
-        let rt = unsafe { mmap(addr as *mut c_void, len, PROT_READ | PROT_WRITE, MAP_SHARED, f.as_raw_fd() as c_int, offset as c_long) };
-        if rt as c_long == -1 {
+        let rt = unsafe { mmap(addr as *mut c_void, len, PROT_READ | PROT_WRITE, MAP_SHARED, f.as_raw_fd() as c_int, offset as c_long) } as Ptr;
+        if rt == -1 {
             Err(Error::last_os_error())
         } else {
             Ok(MMap {
-                addr: addr,
+                addr: addr as Ptr,
                 len: len,
-                vaddr: rt,
+                vaddr: rt as Ptr,
             })
         }
     }
@@ -61,7 +62,7 @@ impl MMap {
     }
 
     pub fn as_pointer(&self) -> *mut c_void {
-        self.vaddr
+        self.vaddr as *mut c_void
     }
 }
 
