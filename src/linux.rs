@@ -15,6 +15,7 @@ const MAP_ANONYMOUS: c_int = 0x20;
 extern {
     fn mmap(_addr: *mut c_void, _len: c_long, _prot: c_int, _flags: c_int, _fd: c_int, _offset: c_long) -> *mut c_void;
     fn munmap(_addr: *mut c_void, _len: c_long) -> c_int;
+    fn free(_addr: *mut c_void);
 }
 
 #[derive(Clone)]
@@ -69,7 +70,7 @@ impl MMap {
 #[allow(drop_with_repr_extern)]
 impl Drop for MMap {
     fn drop(&mut self) {
-        let rt = unsafe { munmap(self.addr as *mut c_void, self.len) };
+        let rt = unsafe { munmap(self.vaddr as *mut c_void, self.len) };
         if rt != 0 {
             println!("Fail to munmap:{:?}", Error::last_os_error());
         }
