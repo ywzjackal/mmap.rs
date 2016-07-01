@@ -69,7 +69,7 @@ impl MMap {
 #[allow(drop_with_repr_extern)]
 impl Drop for MMap {
     fn drop(&mut self) {
-        let rt = unsafe { munmap(0 as *mut c_void, self.len) };
+        let rt = unsafe { munmap(self.addr as *mut c_void, self.len) };
         if rt != 0 {
             println!("Fail to munmap:{:?}", Error::last_os_error());
         }
