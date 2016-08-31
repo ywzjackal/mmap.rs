@@ -5,15 +5,6 @@ pub mod linux;
 
 use linux::MMap;
 use std::io;
-use std::result;
-
-#[derive(Debug)]
-pub enum Error {
-    IO(io::Error),
-    Other(String),
-}
-
-pub type Result<T> = result::Result<T, Error>;
 
 #[derive(Clone)]
 pub struct RegisterMMap {
@@ -21,8 +12,8 @@ pub struct RegisterMMap {
 }
 
 impl RegisterMMap {
-    pub fn new(base_addr: usize, len: usize) -> Result<RegisterMMap> {
-        let map = try!(MMap::with_file(0, len, "/dev/mem", base_addr).map_err(|e| Error::IO(e)));
+    pub fn new(base_addr: usize, len: usize) -> io::Result<RegisterMMap> {
+        let map = try!(MMap::with_file(0, len, "/dev/mem", base_addr));
         Ok(RegisterMMap { map: map })
     }
 
