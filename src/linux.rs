@@ -1,6 +1,6 @@
 use std::io::{Result, Error};
 use libc::{c_int, c_long, c_void};
-use std::fs::{OpenOptions};
+use std::fs::OpenOptions;
 use std::os::unix::io::AsRawFd;
 
 type Ptr = c_long;
@@ -12,8 +12,14 @@ const MAP_SHARED: c_int = 0x01;        /* Share changes.  */
 const MAP_PRIVATE: c_int = 0x02;        /* Changes are private.  */
 const MAP_ANONYMOUS: c_int = 0x20;
 
-extern {
-    fn mmap(_addr: *mut c_void, _len: c_long, _prot: c_int, _flags: c_int, _fd: c_int, _offset: c_long) -> *mut c_void;
+extern "C" {
+    fn mmap(_addr: *mut c_void,
+            _len: c_long,
+            _prot: c_int,
+            _flags: c_int,
+            _fd: c_int,
+            _offset: c_long)
+            -> *mut c_void;
     fn munmap(_addr: *mut c_void, _len: c_long) -> c_int;
     fn free(_addr: *mut c_void);
 }
@@ -28,7 +34,14 @@ pub struct MMap {
 impl MMap {
     pub fn anonymous(addr: usize, len: usize) -> Result<MMap> {
         let len = len as c_long;
-        let rt = unsafe { mmap(addr as *mut c_void, len, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0 as c_long) };
+        let rt = unsafe {
+            mmap(addr as *mut c_void,
+                 len,
+                 PROT_READ | PROT_WRITE,
+                 MAP_SHARED | MAP_ANONYMOUS,
+                 -1,
+                 0 as c_long)
+        };
         if rt as c_long == -1 {
             Err(Error::last_os_error())
         } else {
@@ -43,9 +56,16 @@ impl MMap {
     pub fn with_file(addr: usize, len: usize, path: &str, offset: usize) -> Result<MMap> {
         let mut opt = OpenOptions::new();
         opt.create(false).write(true).read(true).append(false);
-        let f = try!(opt.open(path).map_err(|e| { e }));
+        let f = try!(opt.open(path).map_err(|e| e));
         let len = len as c_long;
-        let rt = unsafe { mmap(addr as *mut c_void, len, PROT_READ | PROT_WRITE, MAP_SHARED, f.as_raw_fd() as c_int, offset as c_long) } as Ptr;
+        let rt = unsafe {
+            mmap(addr as *mut c_void,
+                 len,
+                 PROT_READ | PROT_WRITE,
+                 MAP_SHARED,
+                 f.as_raw_fd() as c_int,
+                 offset as c_long)
+        } as Ptr;
         if rt == -1 {
             Err(Error::last_os_error())
         } else {
@@ -67,7 +87,6 @@ impl MMap {
     }
 }
 
-#[allow(drop_with_repr_extern)]
 impl Drop for MMap {
     fn drop(&mut self) {
         let rt = unsafe { munmap(self.vaddr as *mut c_void, self.len) };

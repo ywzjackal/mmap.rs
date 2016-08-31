@@ -1,0 +1,7 @@
+[package]
+name = "mmap"
+version = "0.1.2"
+authors = ["jackal <ywzjackal@163.com>"]
+
+[dependencies]
+libc = "*"
