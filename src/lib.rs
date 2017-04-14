@@ -6,7 +6,6 @@ pub mod linux;
 use linux::MMap;
 use std::io;
 
-#[derive(Clone)]
 pub struct RegisterMMap {
     map: MMap,
 }

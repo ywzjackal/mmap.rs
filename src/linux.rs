@@ -24,7 +24,6 @@ extern "C" {
     fn free(_addr: *mut c_void);
 }
 
-#[derive(Clone)]
 pub struct MMap {
     addr: Ptr,
     len: c_long,
